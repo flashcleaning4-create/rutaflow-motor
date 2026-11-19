@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RutaFlow · Prueba sin coste</title>
+  <meta name="description" content="Prueba de RutaFlow con mapas libres y cálculo de rutas en el propio móvil." />
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
+  <link rel="stylesheet" href="./estilo.css" />
+</head>
+<body>
+  <header class="bar">
+    <strong>RutaFlow</strong>
+    <span class="tag">prueba sin coste</span>
+    <span id="engine-status" class="status">Cargando el motor…</span>
+  </header>
+
+  <div id="map" aria-label="Mapa"></div>
+
+  <main class="panel">
+    <section class="block">
+      <div class="search">
+        <input id="search" type="search" autocomplete="off"
+               placeholder="Buscar dirección (calle, número, ciudad)" aria-label="Buscar dirección" />
+        <ul id="suggestions" class="suggestions" role="listbox" hidden></ul>
+      </div>
+      <p class="hint">También puedes tocar el mapa para añadir una parada.</p>
+      <details>
+        <summary>Pegar una lista de direcciones</summary>
+        <textarea id="bulk" rows="5" placeholder="Una dirección por línea, por ejemplo:&#10;Calle Mayor 5, Madrid&#10;Carrer de Balmes 40, Barcelona"></textarea>
+        <button id="bulk-add" type="button" class="secondary">Añadir la lista</button>
+      </details>
+    </section>
+
+    <section class="block options">
+      <label>Vehículo
+        <select id="costing">
+          <option value="auto">Coche o furgoneta</option>
+          <option value="truck">Camión</option>
+          <option value="motorcycle">Moto</option>
+          <option value="bicycle">Bicicleta</option>
+        </select>
+      </label>
+      <label class="check"><input id="avoid-tolls" type="checkbox" /> Evitar peajes</label>
+      <label class="check"><input id="same-side" type="checkbox" checked /> Llegar por el lado de la parada</label>
+      <label class="check"><input id="return" type="checkbox" /> Volver a la salida</label>
+      <label>Minutos por parada <input id="stop-minutes" type="number" min="0" max="60" value="5" /></label>
+    </section>
+
+    <section class="block">
+      <h2>Paradas <span id="count" class="muted"></span></h2>
+      <ol id="stops" class="stops"></ol>
+      <div class="actions">
+        <button id="optimize" type="button">Optimizar y calcular</button>
+        <button id="calculate" type="button" class="secondary">Calcular en este orden</button>
+        <button id="clear" type="button" class="danger">Vaciar</button>
+      </div>
+      <p id="progress" class="muted" aria-live="polite"></p>
+    </section>
+
+    <section id="result" class="block" hidden>
+      <h2>Resultado</h2>
+      <p id="summary" class="summary"></p>
+      <p id="stats" class="muted"></p>
+      <p><a id="google-link" target="_blank" rel="noopener">Comparar este orden en Google Maps</a></p>
+      <h3>Indicaciones</h3>
+      <div id="legs"></div>
+    </section>
+
+    <footer class="muted small">
+      Mapa © <a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a>,
+      © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">colaboradores de OpenStreetMap</a>.
+      Direcciones © <a href="https://www.cartociudad.es" target="_blank" rel="noopener">CartoCiudad (IGN)</a>.
+      Rutas calculadas en este dispositivo con <a href="https://github.com/valhalla/valhalla" target="_blank" rel="noopener">Valhalla</a>.
+    </footer>
+  </main>
+
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
