@@ -61,3 +61,24 @@ test('optimizador: rápido con 95 paradas', () => {
   optimizeOrder(cost, { maxMillis: 3000 });
   assert.ok(Date.now() - t < 3500);
 });
+
+import { parseAddress, scoreCandidate, titleCase } from '../prueba/geocoder.js';
+
+test('direcciones escritas a mano: calle, número y municipio', () => {
+  assert.deepEqual(parseAddress('Carrer de Balmes 40, Barcelona'), { street: 'balmes', number: 40, place: 'barcelona', postal: null });
+  assert.deepEqual(parseAddress('calle balmes 40 barcelona'), { street: 'balmes', number: 40, place: 'barcelona', postal: null });
+  assert.deepEqual(parseAddress('C/ Gran de Gràcia, 120, 08012 Barcelona'), { street: 'gran de gracia', number: 120, place: 'barcelona', postal: '08012' });
+  assert.equal(parseAddress("Carrer d'Aragó 255, Barcelona").street, 'arago');
+  assert.equal(parseAddress('Calle 1 de Mayo 3, Murcia').street, '1 de mayo');
+});
+
+test('se prefiere el municipio escrito y el mismo lado de la calle', () => {
+  // Respuesta real de CartoCiudad para «Carrer de Balmes 40, Barcelona».
+  const wanted = parseAddress('Carrer de Balmes 40, Barcelona');
+  const palma = { address: 'CALLE JAUME BALMÉS 41, Palma', muni: 'Palma', poblacion: 'Palma', portalNumber: 41 };
+  const bcn41 = { address: 'CALLE BALMES 41, Barcelona', muni: 'Barcelona', poblacion: 'Barcelona', portalNumber: 41 };
+  const bcn42 = { address: 'CALLE BALMES 42, Barcelona', muni: 'Barcelona', poblacion: 'Barcelona', portalNumber: 42 };
+  assert.ok(scoreCandidate(bcn42, wanted) > scoreCandidate(bcn41, wanted));
+  assert.ok(scoreCandidate(bcn41, wanted) > scoreCandidate(palma, wanted));
+  assert.equal(titleCase("CALLE D'ARAGO 255"), "Calle d'Arago 255");
+});

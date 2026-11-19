@@ -159,6 +159,8 @@ function removeStop(id) {
 function fmtTime(date) {
   return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
 }
+const fmt1 = (n) => n.toLocaleString('es-ES', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
 function fmtDuration(seconds) {
   const m = Math.round(seconds / 60);
   return m < 60 ? `${m} min` : `${Math.floor(m / 60)} h ${String(m % 60).padStart(2, '0')} min`;
@@ -240,11 +242,11 @@ function renderResult() {
   box.hidden = false;
   const times = etas();
   const end = times[times.length - 1];
-  $('summary').textContent = `${lastRoute.summary.km.toFixed(1)} km · ${fmtDuration(lastRoute.summary.seconds)} conduciendo · fin aprox. ${end ? fmtTime(end) : '—'}`;
+  $('summary').textContent = `${fmt1(lastRoute.summary.km)} km · ${fmtDuration(lastRoute.summary.seconds)} conduciendo · fin aprox. ${end ? fmtTime(end) : '—'}`;
   const s = lastRoute.stats;
   $('stats').textContent =
-    `Calculado en el móvil en ${(s.totalMillis / 1000).toFixed(1)} s` +
-    (s.matrixMillis ? ` (tabla de tiempos ${(s.matrixMillis / 1000).toFixed(1)} s)` : '') +
+    `Calculado en el móvil en ${fmt1(s.totalMillis / 1000)} s` +
+    (s.matrixMillis ? ` (tabla de tiempos ${fmt1(s.matrixMillis / 1000)} s)` : '') +
     ` · mapa descargado en total: ${s.downloadedMB} MB · en memoria: ${s.memoryMB} MB`;
   const link = googleLink();
   $('google-link').hidden = !link;
@@ -257,12 +259,12 @@ function renderResult() {
     d.className = 'leg';
     if (i === 0) d.open = true;
     const sum = document.createElement('summary');
-    sum.textContent = `${i === 0 ? 'Salida' : `Parada ${i}`} → ${stops[i + 1] ? `Parada ${i + 1}: ${stops[i + 1].title}` : 'Salida'} · ${leg.km.toFixed(1)} km, ${fmtDuration(leg.seconds)}`;
+    sum.textContent = `${i === 0 ? 'Salida' : `Parada ${i}`} → ${stops[i + 1] ? `Parada ${i + 1}: ${stops[i + 1].title}` : 'Salida'} · ${fmt1(leg.km)} km, ${fmtDuration(leg.seconds)}`;
     d.appendChild(sum);
     const ol = document.createElement('ol');
     leg.maneuvers.forEach((m) => {
       const li = document.createElement('li');
-      li.textContent = `${m.text}${m.km > 0 ? ` (${m.km < 1 ? `${Math.round(m.km * 1000)} m` : `${m.km.toFixed(1)} km`})` : ''}`;
+      li.textContent = `${m.text}${m.km > 0 ? ` (${m.km < 1 ? `${Math.round(m.km * 1000)} m` : `${fmt1(m.km)} km`})` : ''}`;
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'secondary speak';
@@ -346,6 +348,17 @@ for (const id of ['costing', 'avoid-tolls', 'same-side', 'return']) {
 $('stop-minutes').oninput = () => renderAll();
 
 // ---------------------------------------------------------------- buscador
+// Punto de referencia para el buscador: la última parada o, si se ha
+// acercado el mapa, su centro.
+function nearPoint() {
+  if (stops.length) return { lat: stops[stops.length - 1].lat, lon: stops[stops.length - 1].lon };
+  if (map.getZoom && map.getZoom() >= 9) {
+    const c = map.getCenter();
+    return { lat: c.lat, lon: c.lng };
+  }
+  return undefined;
+}
+
 let searchAbort = null;
 let searchTimer = 0;
 let current = [];
@@ -360,7 +373,7 @@ input.addEventListener('input', () => {
     searchAbort?.abort();
     searchAbort = new AbortController();
     try {
-      current = await suggest(input.value, searchAbort.signal);
+      current = await suggest(input.value, searchAbort.signal, nearPoint());
     } catch (err) {
       if (err.name === 'AbortError') return;
       current = [];
@@ -405,7 +418,7 @@ $('bulk-add').onclick = async () => {
   for (const [k, line] of lines.entries()) {
     $('progress').textContent = `Buscando ${k + 1}/${lines.length}: ${line}`;
     try {
-      const found = await geocodeText(line);
+      const found = await geocodeText(line, nearPoint());
       if (found) stops.push({ id: crypto.randomUUID(), title: found.title, subtitle: found.subtitle, lat: found.lat, lon: found.lon });
       else missing.push(line);
     } catch {
