@@ -100,17 +100,17 @@ fs.writeFileSync(path.join(site, 'teselas', 'manifest.json'), JSON.stringify(man
 fs.writeFileSync(
   path.join(site, '_headers'),
   [
+    // Cada ruta debe recibir Access-Control-Allow-Origin una sola vez: si
+    // dos reglas lo añaden, el navegador ve «*, *» y bloquea la petición.
+    '/*',
+    '  Access-Control-Allow-Origin: *',
+    '  X-Content-Type-Options: nosniff',
     '/teselas/manifest.json',
-    '  Access-Control-Allow-Origin: *',
     '  Cache-Control: no-cache',
-    '/teselas/*',
-    '  Access-Control-Allow-Origin: *',
+    '/teselas/:build/*',
     '  Cache-Control: public, max-age=31536000, immutable',
     '/motor/*',
-    '  Access-Control-Allow-Origin: *',
     '  Cache-Control: public, max-age=3600',
-    '/*',
-    '  X-Content-Type-Options: nosniff',
     '',
   ].join('\n')
 );
